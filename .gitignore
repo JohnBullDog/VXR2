@@ -112,3 +112,6 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Burst compiler debug artifacts (build output, not source)
+*BurstDebugInformation_DoNotShip/
