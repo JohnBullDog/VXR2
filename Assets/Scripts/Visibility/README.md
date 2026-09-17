@@ -42,7 +42,9 @@ Add to any object that has multiple interchangeable versions.
    parent works well — only one is active at a time).
 2. Set **Starting Version** to the index that should be active on load.
 3. Optionally set **Bounds Source** to specific renderers to check against; leave it
-   empty to auto-use the current version's renderers.
+   empty to auto-use the renderers of whichever version(s) are involved in a swap
+   (both the outgoing and incoming version are checked, so a swap doesn't wait for
+   the old version to leave view only to have the new one pop in already visible).
 4. Call `RequestSwitchTo(index)` (from a Signal Receiver, `UnityEvent`, or your own
    code) whenever a version change should happen. It applies immediately if the
    object is already out of view, otherwise it waits — checking every frame — until

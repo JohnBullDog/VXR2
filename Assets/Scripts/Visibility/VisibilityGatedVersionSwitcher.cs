@@ -74,9 +74,16 @@ public class VisibilityGatedVersionSwitcher : MonoBehaviour
     {
         if (!_pending.HasValue) return;
 
-        Bounds bounds = ComputeBounds();
+        // Must check both the outgoing AND incoming version's bounds -- if only the current
+        // version's bounds are checked, a pending version with different geometry/extents can
+        // already be in view even while the current one is safely offscreen, and the swap would
+        // make it pop in visibly.
+        Bounds bounds = ComputeBounds(_current);
+        if (versions[_pending.Value] != null)
+            bounds.Encapsulate(ComputeBounds(_pending.Value));
+
         if (EyeVisibilityCones.IsSphereVisible(bounds.center, bounds.extents.magnitude + visibilityMargin))
-            return; // still on-screen -- keep waiting.
+            return; // either version still on-screen -- keep waiting.
 
         ApplyImmediate(_pending.Value);
         _pending = null;
@@ -92,12 +99,15 @@ public class VisibilityGatedVersionSwitcher : MonoBehaviour
         onVersionApplied?.Invoke(index);
     }
 
-    private Bounds ComputeBounds()
+    private Bounds ComputeBounds(int versionIndex)
     {
         Renderer[] source = boundsSource != null && boundsSource.Length > 0
             ? boundsSource
-            : versions[_current] != null
-                ? versions[_current].GetComponentsInChildren<Renderer>()
+            : versions[versionIndex] != null
+                // includeInactive: true -- every non-current version is SetActive(false), so the
+                // default (active-only) search would find nothing and silently fall back to a
+                // tiny placeholder bounds at this object's own position.
+                ? versions[versionIndex].GetComponentsInChildren<Renderer>(true)
                 : Array.Empty<Renderer>();
 
         if (source.Length == 0) return new Bounds(transform.position, Vector3.one * 0.25f);
