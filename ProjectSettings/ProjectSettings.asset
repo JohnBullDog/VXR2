@@ -149,7 +149,9 @@ PlayerSettings:
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
   bundleVersion: 1.0
-  preloadedAssets: []
+  preloadedAssets:
+  - {fileID: -348627342837204857, guid: 3dd11dcd12272e54f8a19d8224e35f53, type: 2}
+  - {fileID: 9030113687040111788, guid: 4b3de149e50ea0c4f8ad04c79b9f12ec, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   xboxOneDisableKinectGpuReservation: 1

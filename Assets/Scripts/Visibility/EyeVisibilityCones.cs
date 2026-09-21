@@ -100,7 +100,7 @@ public class EyeVisibilityCones : MonoBehaviour
     /// True if the sphere is inside either eye's cone -- i.e. the player could plausibly see it.
     public static bool IsSphereVisible(Vector3 center, float radius)
     {
-        if (Instance == null) return true; // fail open: never block a swap just because no cone data exists yet.
+        if (Instance == null) return false; // fail open: never block a swap just because no cone data exists yet.
         return SphereIntersectsCone(Instance.LeftEyeCone, center, radius)
             || SphereIntersectsCone(Instance.RightEyeCone, center, radius);
     }

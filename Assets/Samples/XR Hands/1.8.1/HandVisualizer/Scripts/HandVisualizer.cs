@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
 
@@ -115,17 +114,8 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
         }
 
         XRHandSubsystem m_Subsystem;
-        public XRHandSubsystem subsystem
-        {
-            get => m_Subsystem;
-        }
-
         HandGameObjects m_LeftHandGameObjects;
         HandGameObjects m_RightHandGameObjects;
-
-        public Action<XRHandSubsystem> subsystemSubscribed;
-        public Action<XRHandSubsystem> subsystemUnsubscribed;
-        XRHandSubsystem.UpdateSuccessFlags m_CombinedSuccessFlags;
 
         static readonly List<XRHandSubsystem> s_SubsystemsReuse = new List<XRHandSubsystem>();
 
@@ -264,18 +254,12 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
             m_Subsystem.trackingAcquired += OnTrackingAcquired;
             m_Subsystem.trackingLost += OnTrackingLost;
             m_Subsystem.updatedHands += OnUpdatedHands;
-
-            if (subsystemSubscribed != null)
-                subsystemSubscribed.Invoke(m_Subsystem);
         }
 
         void UnsubscribeHandSubsystem()
         {
             if (m_Subsystem == null)
                 return;
-
-            if (subsystemUnsubscribed != null)
-                subsystemUnsubscribed.Invoke(m_Subsystem);
 
             m_Subsystem.trackingAcquired -= OnTrackingAcquired;
             m_Subsystem.trackingLost -= OnTrackingLost;
@@ -325,7 +309,6 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
             // We have no game logic depending on the Transforms, so early out here
             // (add game logic before this return here, directly querying from
             // subsystem.leftHand and subsystem.rightHand using GetJoint on each hand)
-            m_CombinedSuccessFlags |= updateSuccessFlags;
             if (updateType == XRHandSubsystem.UpdateType.Dynamic)
                 return;
 
@@ -355,19 +338,15 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
 
             m_LeftHandGameObjects.UpdateJoints(
                 subsystem.leftHand,
-                (m_CombinedSuccessFlags & XRHandSubsystem.UpdateSuccessFlags.LeftHandJoints) != 0,
+                (updateSuccessFlags & XRHandSubsystem.UpdateSuccessFlags.LeftHandJoints) != 0,
                 m_DebugDrawJoints,
                 m_VelocityType);
 
             m_RightHandGameObjects.UpdateJoints(
                 subsystem.rightHand,
-                (m_CombinedSuccessFlags & XRHandSubsystem.UpdateSuccessFlags.RightHandJoints) != 0,
+                (updateSuccessFlags & XRHandSubsystem.UpdateSuccessFlags.RightHandJoints) != 0,
                 m_DebugDrawJoints,
                 m_VelocityType);
-
-            // Reset the combined flags after the BeforeRender phase
-            if (updateType == XRHandSubsystem.UpdateType.BeforeRender)
-                m_CombinedSuccessFlags = XRHandSubsystem.UpdateSuccessFlags.None;
         }
 
         class HandGameObjects
@@ -375,13 +354,13 @@ namespace UnityEngine.XR.Hands.Samples.VisualizerSample
             GameObject m_HandRoot;
             GameObject m_DrawJointsParent;
 
-            readonly GameObject[] m_DrawJoints = new GameObject[XRHandJointID.EndMarker.ToIndex()];
-            readonly GameObject[] m_VelocityParents = new GameObject[XRHandJointID.EndMarker.ToIndex()];
-            readonly LineRenderer[] m_Lines = new LineRenderer[XRHandJointID.EndMarker.ToIndex()];
-            readonly JointVisualizer[] m_JointVisualizers = new JointVisualizer[XRHandJointID.EndMarker.ToIndex()];
+            GameObject[] m_DrawJoints = new GameObject[XRHandJointID.EndMarker.ToIndex()];
+            GameObject[] m_VelocityParents = new GameObject[XRHandJointID.EndMarker.ToIndex()];
+            LineRenderer[] m_Lines = new LineRenderer[XRHandJointID.EndMarker.ToIndex()];
+            JointVisualizer[] m_JointVisualizers = new JointVisualizer[XRHandJointID.EndMarker.ToIndex()];
 
-            static readonly Vector3[] s_LinePointsReuse = new Vector3[2];
-            readonly XRHandMeshController m_MeshController;
+            static Vector3[] s_LinePointsReuse = new Vector3[2];
+            XRHandMeshController m_MeshController;
             const float k_LineWidth = 0.005f;
 
             public HandGameObjects(

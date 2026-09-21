@@ -56,6 +56,11 @@ Add to any object that has multiple interchangeable versions.
 swap waits until the object is a bit further out of view rather than right at the
 frustum edge.
 
+Its Inspector also has a custom editor (`Editor/VisibilityGatedVersionSwitcherEditor.cs`)
+that flags common setup mistakes as you make them -- an empty `Versions` list, null or
+duplicate entries, more than one version active at once, an out-of-range
+`Starting Version`, or no `EyeVisibilityCones` in the scene.
+
 ### `VersionSwitchGroup`
 Optional fan-out helper: wire one trigger (e.g. one Signal Receiver) to a
 `VersionSwitchGroup`, list every `VisibilityGatedVersionSwitcher` that should react in

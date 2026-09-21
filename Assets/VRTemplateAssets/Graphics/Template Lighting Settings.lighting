@@ -7,12 +7,12 @@ LightingSettings:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Template Lighting Settings
-  serializedVersion: 9
+  serializedVersion: 10
   m_EnableBakedLightmaps: 1
   m_EnableRealtimeLightmaps: 0
   m_RealtimeEnvironmentLighting: 1
   m_BounceScale: 1
-  m_AlbedoBoost: 1
+  m_AlbedoBoost: 3.24
   m_IndirectOutputScale: 1
   m_UsingShadowmask: 1
   m_BakeBackend: 2
@@ -22,10 +22,16 @@ LightingSettings:
   m_BakeResolution: 40
   m_Padding: 2
   m_LightmapCompression: 3
+  m_LightmapPackingMode: 1
+  m_LightmapPackingMethod: 0
+  m_XAtlasPackingAttempts: 16384
+  m_XAtlasBruteForce: 0
+  m_XAtlasBlockAlign: 0
+  m_XAtlasRepackUnderutilizedLightmaps: 1
   m_AO: 1
   m_AOMaxDistance: 0.1
   m_CompAOExponent: 1
-  m_CompAOExponentDirect: 0
+  m_CompAOExponentDirect: 3.95
   m_ExtractAO: 0
   m_MixedBakeMode: 2
   m_LightmapsBakeMode: 1

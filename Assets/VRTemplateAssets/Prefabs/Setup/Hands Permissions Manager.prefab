@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8635580913397832359}
   - component: {fileID: -7726025807230233048}
-  - component: {fileID: 4928171504350550866}
+  - component: {fileID: 803904461337875641}
   m_Layer: 0
   m_Name: Hands Permissions Manager
   m_TagString: Untagged
@@ -57,25 +57,10 @@ MonoBehaviour:
       onPermissionGranted:
         m_PersistentCalls:
           m_Calls:
-          - m_Target: {fileID: 4928171504350550866}
-            m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
-            m_MethodName: set_enabled
-            m_Mode: 6
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 1
-            m_CallState: 2
-      onPermissionDenied:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 4928171504350550866}
-            m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
-            m_MethodName: set_enabled
-            m_Mode: 6
+          - m_Target: {fileID: 803904461337875641}
+            m_TargetAssemblyTypeName: Unity.VRTemplate.HandSubsystemManager, Assembly-CSharp
+            m_MethodName: EnableHandTracking
+            m_Mode: 1
             m_Arguments:
               m_ObjectArgument: {fileID: 0}
               m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -84,15 +69,30 @@ MonoBehaviour:
               m_StringArgument: 
               m_BoolArgument: 0
             m_CallState: 2
---- !u!114 &4928171504350550866
+      onPermissionDenied:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 803904461337875641}
+            m_TargetAssemblyTypeName: Unity.VRTemplate.HandSubsystemManager, Assembly-CSharp
+            m_MethodName: DisableHandTracking
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+--- !u!114 &803904461337875641
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2687717463706941668}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2362b008f72c40ce827d44cb08079c26, type: 3}
+  m_Script: {fileID: 11500000, guid: 7d52987a218afbc4c81f20e47e2cb295, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

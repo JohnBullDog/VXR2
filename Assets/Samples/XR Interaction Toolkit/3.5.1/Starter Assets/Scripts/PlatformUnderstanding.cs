@@ -113,12 +113,5 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             s_Initialized = true;
             return s_CurrentPlatform;
         }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStaticsOnLoad()
-        {
-            s_CurrentPlatform = XRPlatformType.Other;
-            s_Initialized = false;
-        }
     }
 }

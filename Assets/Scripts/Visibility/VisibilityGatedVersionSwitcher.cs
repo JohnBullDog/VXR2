@@ -34,20 +34,37 @@ public class VisibilityGatedVersionSwitcher : MonoBehaviour
 
     private int _current;
     private int? _pending;
+    private float _steadyStateLogTimer;
 
     public int CurrentVersion => _current;
     public bool HasPendingSwitch => _pending.HasValue;
 
     private void Awake()
     {
+        Debug.Log($"[VGVS-DEBUG] {name}: Awake() -- selfActiveInHierarchy={gameObject.activeInHierarchy} " +
+                  $"versions.Length={(versions == null ? -1 : versions.Length)} startingVersion={startingVersion}", this);
         _current = Mathf.Clamp(startingVersion, 0, versions.Length - 1);
         ApplyImmediate(_current);
+    }
+
+    private void OnEnable()
+    {
+        Debug.Log($"[VGVS-DEBUG] {name}: OnEnable() -- component/GameObject just became enabled/active.", this);
+    }
+
+    private void OnDisable()
+    {
+        Debug.Log($"[VGVS-DEBUG] {name}: OnDisable() -- component/GameObject just became disabled/inactive. " +
+                  $"Update() will NOT run again until this is externally re-enabled.", this);
     }
 
     /// Queues a switch to the given version. Applies immediately if the object is already
     /// outside both eye cones; otherwise waits until it leaves them.
     public void RequestSwitchTo(int versionIndex)
     {
+        Debug.Log($"[VGVS-DEBUG] {name}: RequestSwitchTo({versionIndex}) ENTER -- current={_current} pending={_pending} " +
+                  $"selfActiveInHierarchy={gameObject.activeInHierarchy} enabled={enabled}", this);
+
         if (versionIndex < 0 || versionIndex >= versions.Length)
         {
             Debug.LogWarning($"{name}: RequestSwitchTo({versionIndex}) ignored -- index out of range (0..{versions.Length - 1}).", this);
@@ -68,6 +85,31 @@ public class VisibilityGatedVersionSwitcher : MonoBehaviour
     private void Update()
     {
         if (_pending.HasValue) TryApplyPending();
+
+        // Defensive enforcement: whatever else might flip a version's active state outside this
+        // component's own control, force mutual exclusivity back to the current version every
+        // frame. Cheap (just SetActive calls, which are no-ops when already in the right state)
+        // and guarantees only one version is ever actually active, regardless of the cause.
+        for (int i = 0; i < versions.Length; i++)
+        {
+            if (versions[i] != null && versions[i].activeSelf != (i == _current))
+            {
+                Debug.LogWarning($"[VGVS-DEBUG] {name}: versions[{i}] '{versions[i].name}' activeSelf drifted to " +
+                                  $"{versions[i].activeSelf} while current={_current} -- forcing it back. Something " +
+                                  $"outside this switcher changed it.", versions[i]);
+                versions[i].SetActive(i == _current);
+            }
+        }
+
+        // Steady-state ground-truth dump, independent of pending switches, so we can catch
+        // activeSelf/activeInHierarchy/Renderer.isVisible drifting out of sync with each other
+        // even when nothing is currently being requested.
+        _steadyStateLogTimer += Time.deltaTime;
+        if (_steadyStateLogTimer >= 1f)
+        {
+            _steadyStateLogTimer = 0f;
+            LogFullState("steady-state");
+        }
     }
 
     private void TryApplyPending()
@@ -82,7 +124,12 @@ public class VisibilityGatedVersionSwitcher : MonoBehaviour
         if (versions[_pending.Value] != null)
             bounds.Encapsulate(ComputeBounds(_pending.Value));
 
-        if (EyeVisibilityCones.IsSphereVisible(bounds.center, bounds.extents.magnitude + visibilityMargin))
+        bool stillVisible = EyeVisibilityCones.IsSphereVisible(bounds.center, bounds.extents.magnitude + visibilityMargin);
+        Debug.Log($"[VGVS-DEBUG] {name}: TryApplyPending pending={_pending} current={_current} " +
+                  $"boundsCenter={bounds.center:F2} boundsRadius={bounds.extents.magnitude + visibilityMargin:F2} " +
+                  $"stillVisible={stillVisible} selfActive={gameObject.activeInHierarchy}", this);
+
+        if (stillVisible)
             return; // either version still on-screen -- keep waiting.
 
         ApplyImmediate(_pending.Value);
@@ -95,8 +142,55 @@ public class VisibilityGatedVersionSwitcher : MonoBehaviour
             if (versions[i] != null) versions[i].SetActive(i == index);
 
         Debug.Log($"{name}: switched to version {index}.", this);
+
+        for (int i = 0; i < versions.Length; i++)
+        {
+            if (versions[i] == gameObject && i != index)
+            {
+                Debug.LogWarning($"[VGVS-DEBUG] {name}: switching to version {index} deactivates this switcher's OWN " +
+                                  $"GameObject (versions[{i}] is the host) -- Update()/future pending switches will stop " +
+                                  $"firing until something reactivates it directly.", this);
+            }
+        }
+
         _current = index;
+        LogFullState("after ApplyImmediate");
         onVersionApplied?.Invoke(index);
+    }
+
+    /// Ground-truth dump: for each version, compares the GameObject-level active flags against
+    /// Renderer.isVisible (Unity's actual "is this drawing pixels to a camera right now" signal,
+    /// independent of activeInHierarchy). If activeInHierarchy says false but isVisible says true
+    /// anywhere, that's proof something is rendering this geometry through a path that doesn't
+    /// respect this object's active state (e.g. a static/combined batch, or a duplicate renderer
+    /// elsewhere sharing the same mesh/material).
+    private void LogFullState(string context)
+    {
+        for (int i = 0; i < versions.Length; i++)
+        {
+            GameObject v = versions[i];
+            if (v == null)
+            {
+                Debug.Log($"[VGVS-DEBUG] ({context}) {name}: versions[{i}] is null.", this);
+                continue;
+            }
+
+            Renderer[] renderers = v.GetComponentsInChildren<Renderer>(true);
+            int visibleCount = 0;
+            string rendererDetail = "";
+            foreach (Renderer r in renderers)
+            {
+                if (r.isVisible) visibleCount++;
+                rendererDetail += $"\n      - '{r.name}' enabled={r.enabled} isVisible={r.isVisible} " +
+                                   $"goActiveInHierarchy={r.gameObject.activeInHierarchy}";
+            }
+
+            bool mismatch = !v.activeInHierarchy && visibleCount > 0;
+            string tag = mismatch ? "MISMATCH -- RENDERING WHILE activeInHierarchy=FALSE" : "ok";
+            Debug.Log($"[VGVS-DEBUG] ({context}) {name}: versions[{i}] '{v.name}' current={(i == _current)} " +
+                      $"activeSelf={v.activeSelf} activeInHierarchy={v.activeInHierarchy} " +
+                      $"renderers={renderers.Length} visibleRenderers={visibleCount} [{tag}]{rendererDetail}", v);
+        }
     }
 
     private Bounds ComputeBounds(int versionIndex)
