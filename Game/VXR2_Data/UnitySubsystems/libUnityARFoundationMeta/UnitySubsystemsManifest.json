@@ -1,0 +1,9 @@
+{
+    "name": "libUnityARFoundationMeta",
+    "version": "1.0.0",
+    "libraryName": "libUnityARFoundationMeta",
+    "meshings": [
+    {
+        "id": "MetaOpenXR-Meshing"
+    }]
+}
